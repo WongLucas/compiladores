@@ -1,4 +1,11 @@
 int main()
 {
-	a + b;
+	int a;
+	int b;
+	int c;
+	int d;
+
+	e = a+b*c;
+	n;
+
 }
