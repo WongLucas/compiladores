@@ -21,7 +21,6 @@ struct atributos
 
 struct variavel
 {
-	string label;
 	string nome;
 	string tipo;
 };
@@ -91,37 +90,51 @@ COMANDO 	: E ';'
 
 DECLARACAO	: TK_TIPO_INT TK_ID
 			{
-				$$.label = gentempcode("int");
-				insere_variavel()
-				$$.traducao = "\tint " + $2.label + ";\n";
+				if (!buscaVariavel($2.label)) {
+					$$.label = gentempcode("int");
+					insere_variavel(vars[var_temp_qnt], $2.label, "int");
+				} else {
+					yyerror("Erro: variável '" + $2.label + "' já foi declarada.");
+				}
 			}
 			;
 
 E 			: E '+' E
 			{
 				$$.label = gentempcode("int");
+				insere_variavel(vars[var_temp_qnt], $$.label, "int");
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
 					" = " + $1.label + " + " + $3.label + ";\n";
 			}
-			| E '-' E
+			/*| E '-' E
 			{
 				$$.label = gentempcode("int");
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
 					" = " + $1.label + " - " + $3.label + ";\n";
-			}
+			}*/
 			| TK_ID '=' E
 			{
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				if (buscaVariavel($1.label)) {
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				} else {
+					yyerror("Erro: variável '" + $2.label + "' não foi declarada.");
+				}
 			}
 			| TK_NUM
 			{
 				$$.label = gentempcode("int");
+				insere_variavel(vars[var_temp_qnt], $$.label, "int");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 			| TK_ID
 			{
-				$$.label = gentempcode("int");
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				if (buscaVariavel($1.label)) {
+					$$.label = gentempcode("int");
+					insere_variavel(vars[var_temp_qnt], $$.label, "int");
+					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				} else {
+					yyerror("Erro: variável '" + $1.label + "' não foi declarada.");
+				}
 			}
 			| '(' E ')'
 			{
@@ -160,6 +173,7 @@ void insere_variavel(variavel& a, string nome, string tipo)
 {
     a.nome = nome;
     a.tipo = tipo;
+	var_temp_qnt++;
 }
 
 int main(int argc, char* argv[])
