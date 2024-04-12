@@ -30,12 +30,12 @@ struct variavel vars[10];
 int yylex(void);
 void yyerror(string);
 
-int buscaVariavel(string);
+int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
 string gentempcode(string);
 %}
 
-%token TK_NUM
+%token TK_NUM TK_TIPO_FLOAT
 %token TK_MAIN TK_ID TK_TIPO_INT
 %token TK_FIM TK_ERROR
 
@@ -90,7 +90,7 @@ COMANDO 	: E ';'
 
 DECLARACAO	: TK_TIPO_INT TK_ID
 			{
-				if (!buscaVariavel($2.label)) {
+				if (!busca_variavel($2.label)) {
 					$$.label = gentempcode("int");
 					insere_variavel(vars[var_temp_qnt], $2.label, "int");
 				} else {
@@ -114,7 +114,7 @@ E 			: E '+' E
 			}*/
 			| TK_ID '=' E
 			{
-				if (buscaVariavel($1.label)) {
+				if (busca_variavel($1.label)) {
 					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 				} else {
 					yyerror("Erro: variável '" + $2.label + "' não foi declarada.");
@@ -128,7 +128,7 @@ E 			: E '+' E
 			}
 			| TK_ID
 			{
-				if (buscaVariavel($1.label)) {
+				if (busca_variavel($1.label)) {
 					$$.label = gentempcode("int");
 					insere_variavel(vars[var_temp_qnt], $$.label, "int");
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
@@ -159,7 +159,7 @@ string gentempcode(string tipo)
 	return "t" + to_string(var_temp_qnt);
 }
 
-int buscaVariavel(string nome)
+int busca_variavel(string nome)
 {
 	for(int i = 0; i < var_temp_qnt; i++){
 		if(nome == vars[i].nome){
