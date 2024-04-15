@@ -1,6 +1,9 @@
 int main()
 {
 	int a;
+<<<<<<< HEAD
+	a = 1+1.0;
+=======
 	int b;
 	int c;
 	int d;
@@ -8,4 +11,5 @@ int main()
 	e = a+b*c;
 	n;
 
+>>>>>>> main
 }
