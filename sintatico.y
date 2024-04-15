@@ -10,8 +10,12 @@
 using namespace std;
 
 int var_temp_qnt;
+<<<<<<< HEAD
 int var_temp_qnt_int;
 int var_temp_qnt_float;
+=======
+int var_temp_qnt_tipo;
+>>>>>>> main
 
 struct atributos
 {
@@ -20,6 +24,7 @@ struct atributos
 	string traducao;
 };
 
+<<<<<<< HEAD
 struct variavel
 {
 	string nome;
@@ -27,16 +32,34 @@ struct variavel
 };
 
 struct variavel vars[10];
+=======
+typedef struct variavel
+{
+	string nome;
+	string tipo;
+}var;
+
+var vars[10];
+>>>>>>> main
 
 int yylex(void);
 void yyerror(string);
 
+<<<<<<< HEAD
 int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
 
 string tipo_variavel(string);
 
 string gentempcode(string);
+=======
+string gentempcode();
+string gentempcodetipo();
+
+void insere_variavel(var&, string, string);
+int busca_variavel(string);
+
+>>>>>>> main
 %}
 
 %token TK_NUM TK_TIPO_FLOAT TK_REAL
@@ -46,7 +69,13 @@ string gentempcode(string);
 %start S
 
 %left '+'
+<<<<<<< HEAD
 %left '*'
+=======
+%left '-'
+%left '*'
+%left '/'
+>>>>>>> main
 
 %%
 
@@ -164,6 +193,7 @@ E 			: E '+' E
 				$$.label = gentempcode("int");
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
 					" = " + $1.label + " - " + $3.label + ";\n";
+<<<<<<< HEAD
 			}*/
 			| TK_ID '=' E
 			{
@@ -177,6 +207,29 @@ E 			: E '+' E
 				} else {
 					yyerror("Erro: variável '" + $2.label + "' não foi declarada.");
 				}
+=======
+			}
+			| E '*' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+					" = " + $1.label + " * " + $3.label + ";\n";
+			}
+			| E '/' E
+			{
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+					" = " + $1.label + " / " + $3.label + ";\n";
+			}
+			| TK_ID '=' E
+			{
+				if(busca_variavel($1.label)){
+					$$.label = gentempcode();
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				}else {
+           			yyerror("Erro: variável '" + $1.label + "' não foi declarada.");
+       			}
+>>>>>>> main
 			}
 			| TK_NUM
 			{
@@ -195,9 +248,13 @@ E 			: E '+' E
 			| TK_ID
 			{
 				if (busca_variavel($1.label)) {
+<<<<<<< HEAD
 					$$.label = gentempcode(tipo_variavel($1.label));
 					$$.tipo = tipo_variavel($1.label);
 					insere_variavel(vars[var_temp_qnt], $$.label, tipo_variavel($1.label));
+=======
+					$$.label = gentempcode();
+>>>>>>> main
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 				} else {
 					yyerror("Erro: variável '" + $1.label + "' não foi declarada.");
@@ -208,6 +265,17 @@ E 			: E '+' E
 				$$.label = $2.label;
 				$$.traducao = $2.traducao;
 			}
+			| TK_TIPO_INT TK_ID
+			{
+				if (!busca_variavel($2.label)) {
+					$$.label = gentempcodetipo();
+					$$.traducao = "\t" + $$.label + " = " + $2.label + ";\n";
+					insere_variavel(vars[var_temp_qnt_tipo-1], $2.label, "int");
+				} else {
+					yyerror("Erro: variável '" + $2.label + "' já foi declarada.");
+				}
+
+			}
 			;
 
 %%
@@ -216,7 +284,27 @@ E 			: E '+' E
 
 int yyparse();
 
+<<<<<<< HEAD
 string gentempcode(string tipo)
+=======
+void insere_variavel(var& a, string nome, string tipo)
+{
+    a.nome = nome;
+    a.tipo = tipo;
+}
+
+int busca_variavel(string nome)
+{
+	for(int i = 0; i<var_temp_qnt_tipo ; i++){
+		if(nome == vars[i].nome){
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+string gentempcode()
+>>>>>>> main
 {
 	if(tipo == "int"){
 		var_temp_qnt_int++;
@@ -226,6 +314,7 @@ string gentempcode(string tipo)
 	return "t" + to_string(var_temp_qnt);
 }
 
+<<<<<<< HEAD
 int busca_variavel(string nome)
 {
 	for(int i = 0; i < var_temp_qnt; i++){
@@ -250,11 +339,18 @@ string tipo_variavel(string nome){
 		};
 	}
 	return FALSE;
+=======
+string gentempcodetipo()
+{
+	var_temp_qnt_tipo++;
+	return "t" + to_string(var_temp_qnt_tipo);
+>>>>>>> main
 }
 
 int main(int argc, char* argv[])
 {
 	var_temp_qnt = 0;
+<<<<<<< HEAD
 	var_temp_qnt_int = 0;
 	var_temp_qnt_float = 0;
 
@@ -262,6 +358,14 @@ int main(int argc, char* argv[])
 
 	for(int i = 0; i< var_temp_qnt; i++){
 		cout << vars[i].tipo << " " << vars[i].nome << ";" <<endl;
+=======
+	var_temp_qnt_tipo = 0;
+
+	yyparse();
+
+	for(int i = 0; i<var_temp_qnt_tipo ; i++){
+		cout << "\t" << vars[i].nome << " = " << vars[i].tipo << endl;
+>>>>>>> main
 	}
 	return 0;
 }
