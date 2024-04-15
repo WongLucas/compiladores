@@ -15,6 +15,7 @@ int var_temp_qnt_float;
 
 struct atributos
 {
+	string tipo;
 	string label;
 	string traducao;
 };
@@ -32,6 +33,9 @@ void yyerror(string);
 
 int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
+
+string tipo_variavel(string);
+
 string gentempcode(string);
 %}
 
@@ -42,6 +46,7 @@ string gentempcode(string);
 %start S
 
 %left '+'
+%left '*'
 
 %%
 
@@ -102,18 +107,57 @@ DECLARACAO	: TIPO TK_ID
 TIPO 		: TK_TIPO_INT
 			{
 				$$.label = "int";
+				$$.tipo = "int";
 			}
 			| TK_TIPO_FLOAT
 			{
 				$$.label = "float";
+				$$.tipo = "float";
 			}
 
 E 			: E '+' E
 			{
-				$$.label = gentempcode("int");
-				insere_variavel(vars[var_temp_qnt], $$.label, "int");
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
-					" = " + $1.label + " + " + $3.label + ";\n";
+				if($1.tipo == $3.tipo){
+					$$.label = gentempcode($1.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $1.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = " + $1.label + " + " + $3.label + ";\n";
+					$$.tipo = $1.tipo;
+				}else if($1.tipo == "int" && $3.tipo == "float"){
+					$$.label = gentempcode($3.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $3.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = (float)" + $1.label + " + " + $3.label + ";\n";
+					$$.tipo = $3.tipo;
+				}else if($1.tipo == "float" && $3.tipo == "int"){
+					$$.label = gentempcode($1.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $1.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = " + $1.label + " + (float)" + $3.label + ";\n";
+					$$.tipo = $1.tipo;
+				}
+			}
+			|E '*' E
+			{
+				if($1.tipo == $3.tipo){
+					$$.label = gentempcode($1.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $1.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = " + $1.label + " * " + $3.label + ";\n";
+					$$.tipo = $1.tipo;
+				}else if($1.tipo == "int" && $3.tipo == "float"){
+					$$.label = gentempcode($3.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $3.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = (float)" + $1.label + " * " + $3.label + ";\n";
+					$$.tipo = $3.tipo;
+				}else if($1.tipo == "float" && $3.tipo == "int"){
+					$$.label = gentempcode($1.tipo);
+					insere_variavel(vars[var_temp_qnt], $$.label, $1.tipo);
+					$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+						" = " + $1.label + " * (float)" + $3.label + ";\n";
+					$$.tipo = $1.tipo;
+				}
 			}
 			/*| E '-' E
 			{
@@ -124,7 +168,12 @@ E 			: E '+' E
 			| TK_ID '=' E
 			{
 				if (busca_variavel($1.label)) {
-					$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+					if($3.tipo == tipo_variavel($1.label)){
+						$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+					} else {
+						$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = (" +
+						tipo_variavel($1.label) + ")" + $3.label + ";\n";
+					}
 				} else {
 					yyerror("Erro: variável '" + $2.label + "' não foi declarada.");
 				}
@@ -132,20 +181,23 @@ E 			: E '+' E
 			| TK_NUM
 			{
 				$$.label = gentempcode("int");
+				$$.tipo = "int";
 				insere_variavel(vars[var_temp_qnt], $$.label, "int");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 			| TK_REAL
 			{
 				$$.label = gentempcode("float");
+				$$.tipo = "float";
 				insere_variavel(vars[var_temp_qnt], $$.label, "float");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";				
 			}
 			| TK_ID
 			{
 				if (busca_variavel($1.label)) {
-					$$.label = gentempcode("int");
-					insere_variavel(vars[var_temp_qnt], $$.label, "int");
+					$$.label = gentempcode(tipo_variavel($1.label));
+					$$.tipo = tipo_variavel($1.label);
+					insere_variavel(vars[var_temp_qnt], $$.label, tipo_variavel($1.label));
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 				} else {
 					yyerror("Erro: variável '" + $1.label + "' não foi declarada.");
@@ -189,6 +241,15 @@ void insere_variavel(variavel& a, string nome, string tipo)
     a.nome = nome;
     a.tipo = tipo;
 	var_temp_qnt++;
+}
+
+string tipo_variavel(string nome){
+	for(int i = 0; i < var_temp_qnt; i++){
+		if(nome == vars[i].nome){
+			return vars[i].tipo;
+		};
+	}
+	return FALSE;
 }
 
 int main(int argc, char* argv[])
