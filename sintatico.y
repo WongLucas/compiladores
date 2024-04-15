@@ -208,17 +208,6 @@ E 			: E '+' E
 				$$.label = $2.label;
 				$$.traducao = $2.traducao;
 			}
-			| TK_TIPO_INT TK_ID
-			{
-				if (!busca_variavel($2.label)) {
-					$$.label = gentempcodetipo();
-					$$.traducao = "\t" + $$.label + " = " + $2.label + ";\n";
-					insere_variavel(vars[var_temp_qnt_tipo-1], $2.label, "int");
-				} else {
-					yyerror("Erro: variável '" + $2.label + "' já foi declarada.");
-				}
-
-			}
 			;
 
 %%
