@@ -206,6 +206,12 @@ E 			: E '+' E
 			{
 				$$ = $2;
 			}
+			| '(' TIPO ')' '(' E ')'
+			{
+				$$.tipo = $2.tipo;
+				$$.label = gentempcode($2.tipo);
+				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
+			}
 			;
 
 %%
