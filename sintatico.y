@@ -209,7 +209,7 @@ E 			: E '+' E
 			| '(' TIPO ')' '(' E ')'
 			{
 				$$.tipo = $2.tipo;
-				$$.label = gentempcode($2.tipo);
+				$$.label = gentempcode($$.tipo);
 				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
 			}
 			;
