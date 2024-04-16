@@ -114,6 +114,7 @@ TIPO 		: TK_TIPO_INT
 				$$.label = "float";
 				$$.tipo = "float";
 			}
+			;
 
 E 			: E '+' E
 			{
@@ -137,7 +138,7 @@ E 			: E '+' E
 					$$.tipo = $1.tipo;
 				}
 			}
-			|E '*' E
+			| E '*' E
 			{
 				if($1.tipo == $3.tipo){
 					$$.label = gentempcode($1.tipo);
@@ -203,8 +204,13 @@ E 			: E '+' E
 			}
 			| '(' E ')'
 			{
-				$$.label = $2.label;
-				$$.traducao = $2.traducao;
+				$$ = $2;
+			}
+			| '(' TIPO ')' '(' E ')'
+			{
+				$$.tipo = $2.tipo;
+				$$.label = gentempcode($2.tipo);
+				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
 			}
 			;
 
