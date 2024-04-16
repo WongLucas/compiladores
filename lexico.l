@@ -31,9 +31,9 @@ ID {LETRA}({LETRA}|{NUM})*
 
 "="		    { return '='; }
 
-{NUM}		{ yylval.label = yytext; return TK_NUM; }
+{NUM}		{ yylval.label = yytext; yylval.tipo = "int"; return TK_NUM; }
 {ID}		{ yylval.label = yytext; return TK_ID; }
-{REAL}		{ yylval.label = yytext; return TK_REAL; }
+{REAL}		{ yylval.label = yytext; yylval.tipo = "float"; return TK_REAL; }
 
 .			{ *yytext; }
 

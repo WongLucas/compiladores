@@ -181,14 +181,12 @@ E 			: E '+' E
 			| TK_NUM
 			{
 				$$.label = gentempcode("int");
-				$$.tipo = "int";
 				insere_variavel(vars[var_temp_qnt], $$.label, "int");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
 			| TK_REAL
 			{
 				$$.label = gentempcode("float");
-				$$.tipo = "float";
 				insere_variavel(vars[var_temp_qnt], $$.label, "float");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";				
 			}
