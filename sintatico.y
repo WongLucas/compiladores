@@ -39,9 +39,10 @@ string tipo_variavel(string);
 string gentempcode(string);
 %}
 
-%token TK_NUM TK_TIPO_FLOAT TK_REAL
-%token TK_MAIN TK_ID TK_TIPO_INT
+%token TK_NUM TK_REAL TK_BOOL TK_CHAR
+%token TK_MAIN TK_ID 
 %token TK_FIM TK_ERROR
+%token TK_TIPO_BOOLEAN TK_TIPO_FLOAT TK_TIPO_INT TK_TIPO_CHAR
 
 %start S
 
@@ -56,6 +57,9 @@ S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
 								"#include <iostream>\n"
 								"#include<string.h>\n"
 								"#include<stdio.h>\n"
+								"#define bool int\n"
+								"#define true 1\n"
+								"#define false 0\n"
 								"int main(void) {\n";
 
 				codigo += $5.traducao;
@@ -96,8 +100,7 @@ COMANDO 	: E ';'
 DECLARACAO	: TIPO TK_ID
 			{
 				if (!busca_variavel($2.label)) {
-					$$.label = gentempcode($1.label);
-					insere_variavel(vars[var_temp_qnt], $2.label, $1.label);
+					insere_variavel(vars[var_temp_qnt], $2.label, $1.tipo);
 				} else {
 					yyerror("Erro: variável '" + $2.label + "' já foi declarada.");
 				}
@@ -106,13 +109,15 @@ DECLARACAO	: TIPO TK_ID
 
 TIPO 		: TK_TIPO_INT
 			{
-				$$.label = "int";
-				$$.tipo = "int";
 			}
 			| TK_TIPO_FLOAT
 			{
-				$$.label = "float";
-				$$.tipo = "float";
+			}
+			| TK_TIPO_BOOLEAN
+			{
+			}
+			| TK_TIPO_CHAR
+			{
 			}
 			;
 
@@ -189,6 +194,18 @@ E 			: E '+' E
 			{
 				$$.label = gentempcode("float");
 				insere_variavel(vars[var_temp_qnt], $$.label, "float");
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";				
+			}
+			| TK_BOOL
+			{
+				$$.label = gentempcode("bool");
+				insere_variavel(vars[var_temp_qnt], $$.label, "bool");
+				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";				
+			}
+			| TK_CHAR
+			{
+				$$.label = gentempcode("char");
+				insere_variavel(vars[var_temp_qnt], $$.label, "char");
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";				
 			}
 			| TK_ID
