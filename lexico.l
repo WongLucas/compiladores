@@ -4,6 +4,7 @@
 %}
 
 ESPACO [ \t]
+FIM_LINHA [\n]
 DIGITO [0-9]
 LETRA [A-Za-z_]
 
@@ -12,12 +13,15 @@ NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
+COMENT ("//"(.*))
 
 %%
 
-"\n"		{}
+{FIM_LINHA}	{num_linha++;}
 
 {DELIM} 	{}
+
+{COMENT}    {}
 
 "main"		{return TK_MAIN;}
 

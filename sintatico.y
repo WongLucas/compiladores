@@ -12,6 +12,9 @@ using namespace std;
 int var_temp_qnt;
 int var_temp_qnt_int;
 int var_temp_qnt_float;
+int num_linha = 1;
+
+bool ocorreu_erro = false;
 
 struct atributos
 {
@@ -28,11 +31,14 @@ struct variavel
 
 struct variavel vars[20];
 
+string lista_erros = "";
 string declaracoes = "";
 void insere_declaracoes();
 
 int yylex(void);
 void yyerror(string);
+
+void pega_erro(string);
 
 int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
@@ -60,6 +66,10 @@ string gentempcode(string);
 
 S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
 			{
+				if(ocorreu_erro){
+					yyerror(lista_erros);
+				}
+
 				string codigo = "/*Compilador FOCA*/\n"
 								"#include <iostream>\n"
 								"#include<string.h>\n"
@@ -110,7 +120,7 @@ DECLARACAO	: TIPO TK_ID
 				if (!busca_variavel($2.label)) {
 					insere_variavel(vars[var_temp_qnt], $2.label, $1.tipo);
 				} else {
-					yyerror("Erro: variável '" + $2.label + "' já foi declarada.");
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
 				}
 			}
 			;
@@ -156,7 +166,7 @@ E 			: E '+' E
 						obter_tipo_variavel($1.label) + ")" + $3.label + ";\n";
 					}
 				} else {
-					yyerror("Erro: variável '" + $2.label + "' não foi declarada.");
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' não foi declarada.");
 				}
 			}
 			| TK_NUM
@@ -191,7 +201,7 @@ E 			: E '+' E
 					insere_variavel(vars[var_temp_qnt], $$.label, obter_tipo_variavel($1.label));
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 				} else {
-					yyerror("Erro: variável '" + $1.label + "' não foi declarada.");
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $1.label + "' não foi declarada.");
 				}
 			}
 			| '(' E ')'
@@ -433,6 +443,11 @@ int main(int argc, char* argv[])
 	yyparse();
 
 	return 0;
+}
+
+void pega_erro(string MSG) {
+	lista_erros += MSG + "\n";
+	ocorreu_erro = true;
 }
 
 void yyerror(string MSG)
