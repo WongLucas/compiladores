@@ -28,6 +28,9 @@ struct variavel
 
 struct variavel vars[20];
 
+string declaracoes = "";
+void insere_declaracoes();
+
 int yylex(void);
 void yyerror(string);
 
@@ -65,7 +68,8 @@ S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
 								"#define true 1\n"
 								"#define false 0\n"
 								"int main(void) {\n";
-
+				insere_declaracoes();
+				codigo += declaracoes;
 				codigo += $5.traducao;
 								
 				codigo += 	"\treturn 0;"
@@ -233,6 +237,12 @@ void insere_variavel(variavel& a, string nome, string tipo)
     a.nome = nome;
     a.tipo = tipo;
 	var_temp_qnt++;
+}
+
+void insere_declaracoes(){
+	for(int i = 0; i < var_temp_qnt; i++){
+		declaracoes += "\t" + vars[i].tipo + " " + vars[i].nome + ";\n";
+	}
 }
 
 string obter_tipo_variavel(string nome){
@@ -422,9 +432,6 @@ int main(int argc, char* argv[])
 
 	yyparse();
 
-	for(int i = 0; i< var_temp_qnt; i++){
-		cout << vars[i].tipo << " " << vars[i].nome << ";" <<endl;
-	}
 	return 0;
 }
 
