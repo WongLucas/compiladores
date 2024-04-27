@@ -12,7 +12,7 @@ using namespace std;
 int var_temp_qnt;
 int var_temp_qnt_int;
 int var_temp_qnt_float;
-int num_linha = 1;
+int num_linha;
 
 bool ocorreu_erro = false;
 
