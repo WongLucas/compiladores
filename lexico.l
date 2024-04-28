@@ -1,5 +1,3 @@
-%option yylineno
-
 %{
 #include <string>
 
@@ -15,15 +13,15 @@ NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
-COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
+COMENT ("//"(.*))
 
 %%
 
-{FIM_LINHA}	{num_linha = yylineno;}
+{FIM_LINHA}	{num_linha++;}
 
 {DELIM} 	{}
 
-{COMENT}    {num_linha = yylineno;}
+{COMENT}    {}
 
 "main"		{return TK_MAIN;}
 
@@ -45,7 +43,7 @@ COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 "true"|"false"  { yylval.label = yytext; yylval.tipo = "bool"; return TK_BOOL;}
 {CHAR}          { yylval.label = yytext; yylval.tipo = "char"; return TK_CHAR; }
 {REAL}		    { yylval.label = yytext; yylval.tipo = "float"; return TK_REAL; }
-{ID}		    { yylval.label = yytext; return TK_ID; }
+{ID}		{ yylval.label = yytext; return TK_ID; }
 
 
 .			{ *yytext; }
