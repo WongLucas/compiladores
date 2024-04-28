@@ -41,6 +41,17 @@ COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 
 "="		    { return '='; }
 
+">"         { return MAIOR; }
+">="        { return MAIOR_IGUAL; }
+"<"         { return MENOR; }
+"<="        { return MENOR_IGUAL; }
+"=="        { return IGUAL; }
+"!="        { return NAO_IGUAL; }
+
+"!"        { return NAO; }
+"&&"        { return AND; }
+"||"        { return OR; }
+
 {NUM}		    { yylval.label = yytext; yylval.tipo = "int"; return TK_NUM; }
 "true"|"false"  { yylval.label = yytext; yylval.tipo = "bool"; return TK_BOOL;}
 {CHAR}          { yylval.label = yytext; yylval.tipo = "char"; return TK_CHAR; }

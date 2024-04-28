@@ -56,11 +56,15 @@ string gentempcode(string);
 %token TK_MAIN TK_ID 
 %token TK_FIM TK_ERROR
 %token TK_TIPO_BOOLEAN TK_TIPO_FLOAT TK_TIPO_INT TK_TIPO_CHAR
-
+%token MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL NAO_IGUAL
+%token NAO AND OR
 %start S
 
-%left '+'
-%left '*'
+%left NAO
+%left AND OR
+%left MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL
+%left '+' '-'
+%left '*' '/'
 
 %%
 
@@ -151,10 +155,21 @@ E 			: E '+' E
 			{
 				realizarOperacao("*", $1, $3, $$);				
 			}
-
 			| E '/' E
 			{
 				realizarOperacao("/", $1, $3, $$);
+			}
+			| OPERACAO_RELACIONAL
+			{
+				if($1.tipo != "bool"){
+					$$.label = gentempcode("bool");
+					insere_variavel(vars[var_temp_qnt], $$.label, "bool");
+					$$.traducao += "\t" + $$.label + " = (bool) " + $1.label + "\n";
+					$$.tipo = "bool";
+				}else {
+					$$ = $1;
+				}
+				
 			}
 			| TK_ID '=' E
 			{
@@ -212,7 +227,45 @@ E 			: E '+' E
 			{
 				$$.tipo = $2.tipo;
 				$$.label = gentempcode($$.tipo);
+				insere_variavel(vars[var_temp_qnt], $$.label, $2.tipo);
 				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
+			}
+			;
+
+OPERACAO_RELACIONAL:
+			E MAIOR E{
+				realizarOperacao(">", $1, $3, $$);
+			}
+			| E MAIOR_IGUAL E{
+				realizarOperacao(">=", $1, $3, $$);
+			}
+			| E MENOR E{
+				realizarOperacao("<", $1, $3, $$);
+			}
+			| E MENOR_IGUAL E{
+				realizarOperacao("<=", $1, $3, $$);
+			}
+			| E IGUAL E{
+				realizarOperacao("==", $1, $3, $$);
+			}
+			| E NAO_IGUAL E{
+				realizarOperacao("!=", $1, $3, $$);
+			}
+			| E AND E{
+				realizarOperacao("&&", $1, $3, $$);
+			}
+			| E OR E{
+				realizarOperacao("||", $1, $3, $$);
+			}
+			| NAO E{
+				$$.label = gentempcode("bool");
+				insere_variavel(vars[var_temp_qnt], $$.label, "bool");
+				if($2.tipo != "bool"){
+					$$.traducao += $2.traducao + "\t" + $$.label + " = !(bool)" + $2.label + "\n";
+				} else {
+					$$.traducao += $2.traducao + "\t" + $$.label + " = !" + $2.label + "\n";
+				}
+				$$.tipo = "bool";
 			}
 			;
 

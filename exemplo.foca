@@ -1,21 +1,5 @@
 int main()
 {
-	//wong feio hahahaha
-	/*Here it comes once again
-	the first face is adren hes gonna hit the ground
-	theres cooold OOOOH
-	ONE JUMPING DOUBLE FOR COOOLD
-	WHAT IS HE GOING ON RIGHT NOW
-	HOW DOES HE DO THIS
-	cold saved luminosity with the awp play
-	unthinkble things there on the B apartaments
-	they needed a huge play
-	but that was something ill never gonna see ever again
-	ridiculous stuff*/
-
-	a = 1;
-	int b;
-	b = c + d + a;
-	float b;
-	a;
+	int a;
+	a = 2.1 + 2;
 }
