@@ -53,16 +53,14 @@ string gentempcode(string);
 %}
 
 %token TK_NUM TK_REAL TK_BOOL TK_CHAR
-%token TK_MAIN TK_ID TK_IGUAL TK_DIF TK_RELACIONAL
+%token TK_MAIN TK_ID 
 %token TK_FIM TK_ERROR
 %token TK_TIPO_BOOLEAN TK_TIPO_FLOAT TK_TIPO_INT TK_TIPO_CHAR
 
 %start S
 
-%left TK_IGUAL TK_DIF
-%left TK_RELACIONAL
-%left '+' '-'
-%left '*' '/' '%'
+%left '+'
+%left '*'
 
 %%
 
@@ -153,21 +151,10 @@ E 			: E '+' E
 			{
 				realizarOperacao("*", $1, $3, $$);				
 			}
+
 			| E '/' E
 			{
 				realizarOperacao("/", $1, $3, $$);
-			}
-			| E TK_IGUAL E
-			{
-				realizarOperacao("==", $1, $3, $$);
-			}
-			| E TK_DIF E
-			{
-				realizarOperacao("!=", $1, $3, $$);
-			}
-			| E TK_RELACIONAL E
-			{
-				realizarOperacao($2.label, $1, $3, $$);
 			}
 			| TK_ID '=' E
 			{
@@ -225,7 +212,6 @@ E 			: E '+' E
 			{
 				$$.tipo = $2.tipo;
 				$$.label = gentempcode($$.tipo);
-				insere_variavel(vars[var_temp_qnt], $$.label, $2.tipo);
 				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
 			}
 			;
