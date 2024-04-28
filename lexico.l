@@ -25,7 +25,7 @@ COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 
 {COMENT}    {num_linha = yylineno;}
 
-"main"		{ return TK_MAIN;}
+"main"		{return TK_MAIN;}
 
 "int"		{ yylval.tipo = "int"; return TK_TIPO_INT;}
 
@@ -35,15 +35,9 @@ COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 
 "char"		{  yylval.tipo = "char"; return TK_TIPO_CHAR;}
 
-"=="		{  return TK_IGUAL;}
-
-"!="		{  return TK_DIF;}
-
-"<="|">="|[<>]	{ yylval.label = yytext; return TK_RELACIONAL;}
-
 [(){}[\];,]	{ return *yytext; }
 
-[+\-*/%]	{ return *yytext; }
+[+\-*/]		{ return *yytext; }
 
 "="		    { return '='; }
 
