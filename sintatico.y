@@ -12,7 +12,7 @@ using namespace std;
 int var_temp_qnt;
 int var_temp_qnt_int;
 int var_temp_qnt_float;
-int num_linha = 1;
+int num_linha;
 
 bool ocorreu_erro = false;
 
@@ -56,11 +56,15 @@ string gentempcode(string);
 %token TK_MAIN TK_ID 
 %token TK_FIM TK_ERROR
 %token TK_TIPO_BOOLEAN TK_TIPO_FLOAT TK_TIPO_INT TK_TIPO_CHAR
-
+%token MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL NAO_IGUAL
+%token NAO AND OR
 %start S
 
-%left '+'
-%left '*'
+%left NAO
+%left AND OR
+%left MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL
+%left '+' '-'
+%left '*' '/'
 
 %%
 
@@ -151,10 +155,13 @@ E 			: E '+' E
 			{
 				realizarOperacao("*", $1, $3, $$);				
 			}
-
 			| E '/' E
 			{
 				realizarOperacao("/", $1, $3, $$);
+			}
+			| OPERACAO_RELACIONAL
+			{
+				$$ = $1;
 			}
 			| TK_ID '=' E
 			{
@@ -212,7 +219,45 @@ E 			: E '+' E
 			{
 				$$.tipo = $2.tipo;
 				$$.label = gentempcode($$.tipo);
+				insere_variavel(vars[var_temp_qnt], $$.label, $2.tipo);
 				$$.traducao = $5.traducao + "\t" + $$.label + " = (" + $2.tipo + ")" + $5.label + ";\n";
+			}
+			;
+
+OPERACAO_RELACIONAL:
+			E MAIOR E{
+				realizarOperacao(">", $1, $3, $$);
+			}
+			| E MAIOR_IGUAL E{
+				realizarOperacao(">=", $1, $3, $$);
+			}
+			| E MENOR E{
+				realizarOperacao("<", $1, $3, $$);
+			}
+			| E MENOR_IGUAL E{
+				realizarOperacao("<=", $1, $3, $$);
+			}
+			| E IGUAL E{
+				realizarOperacao("==", $1, $3, $$);
+			}
+			| E NAO_IGUAL E{
+				realizarOperacao("!=", $1, $3, $$);
+			}
+			| E AND E{
+				realizarOperacao("&&", $1, $3, $$);
+			}
+			| E OR E{
+				realizarOperacao("||", $1, $3, $$);
+			}
+			| NAO E{
+				$$.label = gentempcode("bool");
+				insere_variavel(vars[var_temp_qnt], $$.label, "bool");
+				if($2.tipo != "bool"){
+					$$.traducao += $2.traducao + "\t" + $$.label + " = !(bool)" + $2.label + ";\n";
+				} else {
+					$$.traducao += $2.traducao + "\t" + $$.label + " = !" + $2.label + ";\n";
+				}
+				$$.tipo = "bool";
 			}
 			;
 
@@ -266,10 +311,11 @@ string obter_tipo_variavel(string nome){
 
 void realizarOperacao(string operador, atributos& atributo1, atributos& atributo2, atributos& resultado) {
 	string tipo_resultado = obter_tipo_operacao(atributo1.tipo, atributo2.tipo);
+	struct atributos conversao_auxiliar;
+
 	//MesmoTipo Operacao MesmoTipo 
     if (atributo1.tipo == atributo2.tipo) {
-        resultado.label = gentempcode(atributo1.tipo);
-
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, atributo1.tipo);
 
         resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
@@ -279,125 +325,162 @@ void realizarOperacao(string operador, atributos& atributo1, atributos& atributo
 
 	//FLOAT Operacao INT
     } else if (atributo1.tipo == "float" && atributo2.tipo == "int") { 
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
+
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 
 	//FLOAT Operacao CHAR
-    } else if (atributo1.tipo == "float" && atributo2.tipo == "char") {
-        resultado.label = gentempcode(tipo_resultado);
-
+    } else if (atributo1.tipo == "float" && atributo2.tipo == "char") { 
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 
 	//FLOAT Operacao BOOL
-    } else if (atributo1.tipo == "float" && atributo2.tipo == "bool") {
-        resultado.label = gentempcode(tipo_resultado);
-
+    } else if (atributo1.tipo == "float" && atributo2.tipo == "bool") { 
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 
 	//INT Operacao FLOAT
     } else if (atributo1.tipo == "int" && atributo2.tipo == "float") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
     //INT Operacao CHAR
-    } else if (atributo1.tipo == "int" && atributo2.tipo == "char") {
-        resultado.label = gentempcode(tipo_resultado);
-
+    } else if (atributo1.tipo == "int" && atributo2.tipo == "char") { 
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
+
 	//INT Operacao BOOL
-    } else if (atributo1.tipo == "int" && atributo2.tipo == "bool") {
-        resultado.label = gentempcode(tipo_resultado);
-
+    } else if (atributo1.tipo == "int" && atributo2.tipo == "bool") { 
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//CHAR Operacao FLOAT
     } else if (atributo1.tipo == "char" && atributo2.tipo == "float") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//CHAR Operacao INT
 	} else if (atributo1.tipo == "char" && atributo2.tipo == "int") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//CHAR Operacao BOOL
-    } else if (atributo1.tipo == "char" && atributo2.tipo == "bool") {
-        resultado.label = gentempcode(tipo_resultado);
-
+    } else if (atributo1.tipo == "char" && atributo2.tipo == "bool") { 
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+		conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo2.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = " + atributo1.label + " " + operador + " (" + tipo_resultado + ")" + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo1.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//BOOL Operacao FLOAT
     } else if (atributo1.tipo == "bool" && atributo2.tipo == "float") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//BOOL Operacao INT
     } else if (atributo1.tipo == "bool" && atributo2.tipo == "int") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
 	//BOOL Operacao CHAR	
     } else if (atributo1.tipo == "bool" && atributo2.tipo == "char") {
-        resultado.label = gentempcode(tipo_resultado);
-
+		conversao_auxiliar.label = gentempcode(tipo_resultado);
+		insere_variavel(vars[var_temp_qnt], conversao_auxiliar.label, tipo_resultado);
+		resultado.label = gentempcode(tipo_resultado);
         insere_variavel(vars[var_temp_qnt], resultado.label, tipo_resultado);
+		
+        conversao_auxiliar.traducao = conversao_auxiliar.label + " = " + "(" + tipo_resultado + ")" + atributo1.label + ";\n";
 
-        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" +
-		resultado.label + " = (" + atributo2.tipo + ")" + atributo1.label + " " + operador + " " + atributo2.label + ";\n";
+        resultado.traducao = atributo1.traducao + atributo2.traducao + "\t" + conversao_auxiliar.traducao + "\t" +
+		resultado.label + " = " + atributo2.label + " " + operador + " " + conversao_auxiliar.label + ";\n";
 
         resultado.tipo = tipo_resultado;
     }
