@@ -50,6 +50,8 @@ string obter_tipo_variavel(string);
 string obter_tipo_operacao(string, string);
 
 string gentempcode(string);
+
+bool operacao_bool_valida(string);
 %}
 
 %token TK_NUM TK_REAL TK_BOOL TK_CHAR
@@ -60,11 +62,13 @@ string gentempcode(string);
 %token NAO AND OR
 %start S
 
-%left NAO
-%left AND OR
-%left MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL
+%left OR
+%left AND
+%left IGUAL NAO_IGUAL
+%left MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL 
 %left '+' '-'
 %left '*' '/'
+%left NAO
 
 %%
 
@@ -309,9 +313,25 @@ string obter_tipo_variavel(string nome){
 	return FALSE;
 }
 
+bool operacao_bool_valida(string op){
+	string operadores[4] = {"||", "&&" , "==", "!="};
+
+	if(op == "||" || op == "&&" || op == "==" || op == "!="){
+		return true;
+	}
+	return false;
+}
+
 void realizarOperacao(string operador, atributos& atributo1, atributos& atributo2, atributos& resultado) {
 	string tipo_resultado = obter_tipo_operacao(atributo1.tipo, atributo2.tipo);
 	struct atributos conversao_auxiliar;
+
+	if(atributo1.tipo != atributo2.tipo && (atributo1.tipo == "bool" || atributo2.tipo == "bool")){
+		pega_erro("linha " + to_string(num_linha) + ": erro: tipos de operandos incompatíveis para o operador '" + operador + "'.");
+	}
+	else if(!operacao_bool_valida(operador)){
+		pega_erro("linha " + to_string(num_linha) + ": erro: operador '" + operador + "' não definido para o tipo bool.");
+	}
 
 	//MesmoTipo Operacao MesmoTipo 
     if (atributo1.tipo == atributo2.tipo) {
@@ -487,34 +507,34 @@ void realizarOperacao(string operador, atributos& atributo1, atributos& atributo
 }
 
 string obter_tipo_operacao(string tipo1, string tipo2) {
-  if (tipo1 == tipo2) {
-    return tipo1;
-  } else if (tipo1 == "float" && tipo2 == "int"){
-	return "float";
-  } else if (tipo1 == "float" && tipo2 == "char") {
-    return "float";
-  } else if (tipo1 == "float" && tipo2 == "bool") {
-    return "float";
-  } else if (tipo1 == "int" && tipo2 == "float") {
-    return "float";
-  } else if (tipo1 == "int" && tipo2 == "char") {
-    return "int";
-  } else if (tipo1 == "int" && tipo2 == "bool") {
-    return "int";
-  } else if (tipo1 == "char" && tipo2 == "float") {
-    return "float";
-  } else if (tipo1 == "char" && tipo2 == "int") {
-    return "int";
-  } else if (tipo1 == "char" && tipo2 == "bool") {
-    return "char";
-  } else if (tipo1 == "bool" && tipo2 == "float") {
-    return "float";
-  } else if (tipo1 == "bool" && tipo2 == "int") {
-    return "int";
-  } else if (tipo1 == "bool" && tipo2 == "char") {
-    return "char";
-  }
-  return "";
+	if (tipo1 == tipo2) {
+		return tipo1;
+	} else if (tipo1 == "float" && tipo2 == "int"){
+		return "float";
+	} else if (tipo1 == "float" && tipo2 == "char") {
+		return "float";
+	} else if (tipo1 == "float" && tipo2 == "bool") {
+		return "float";
+	} else if (tipo1 == "int" && tipo2 == "float") {
+		return "float";
+	} else if (tipo1 == "int" && tipo2 == "char") {
+		return "int";
+	} else if (tipo1 == "int" && tipo2 == "bool") {
+		return "int";
+	} else if (tipo1 == "char" && tipo2 == "float") {
+		return "float";
+	} else if (tipo1 == "char" && tipo2 == "int") {
+		return "int";
+	} else if (tipo1 == "char" && tipo2 == "bool") {
+		return "char";
+	} else if (tipo1 == "bool" && tipo2 == "float") {
+		return "float";
+	} else if (tipo1 == "bool" && tipo2 == "int") {
+		return "int";
+	} else if (tipo1 == "bool" && tipo2 == "char") {
+		return "char";
+	}
+	return "";
 }
 
 int main(int argc, char* argv[])
