@@ -8,7 +8,6 @@
 #define FALSE 0
 
 using namespace std;
-
 int var_temp_qnt;
 int var_temp_qnt_int;
 int var_temp_qnt_float;
@@ -27,6 +26,7 @@ struct variavel
 {
 	string nome;
 	string tipo;
+	int inicializada;
 };
 
 struct variavel vars[20];
@@ -42,6 +42,8 @@ void pega_erro(string);
 
 int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
+int verifica_inicializacao(string name);
+void inicializar_variavel(string name);
 
 void realizarOperacao(string operador, atributos& atributo1, atributos& atributo2, atributos& resultado);
 
@@ -174,6 +176,7 @@ E 			: E '+' E
 			| TK_ID '=' E
 			{
 				if (busca_variavel($1.label)) {
+					inicializar_variavel($1.label);
 					if($3.tipo == obter_tipo_variavel($1.label)){
 						$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 					} else {
@@ -211,11 +214,14 @@ E 			: E '+' E
 			| TK_ID
 			{
 				if (busca_variavel($1.label)) {
+					if (verifica_inicializacao($1.label) == 1){
 					$$.label = gentempcode(obter_tipo_variavel($1.label));
 					$$.tipo = obter_tipo_variavel($1.label);
 					insere_variavel(vars[var_temp_qnt], $$.label, obter_tipo_variavel($1.label));
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				} else {
+					}else{ 
+						pega_erro("linha " + to_string(num_linha) + ": erro: variável " + $1.label + "não foi inicializada.");
+				}}else {
 					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $1.label + "' não foi declarada.");
 				}
 			}
@@ -299,6 +305,7 @@ void insere_variavel(variavel& a, string nome, string tipo)
 {
     a.nome = nome;
     a.tipo = tipo;
+	a.inicializada = 0;
 	var_temp_qnt++;
 }
 
@@ -502,6 +509,26 @@ void pega_erro(string MSG) {
 	lista_erros += MSG + "\n";
 	ocorreu_erro = true;
 }
+int verifica_inicializacao(string name){
+	for(i = 0; i < var_temp_qnt; i++){
+		if (vars[i].nome == name){
+			if (vars[i].inicializada == 1){
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void inicializar_variavel(string name){
+	for(i = 0; i < var_temp_qnt; i++){
+		if (vars[i].nome == name){
+			vars[i].inicializada = 1;
+			break;
+		}
+	}
+}
+
 
 void yyerror(string MSG)
 {
