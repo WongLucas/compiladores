@@ -329,7 +329,7 @@ void realizarOperacao(string operador, atributos& atributo1, atributos& atributo
 	if(atributo1.tipo != atributo2.tipo && (atributo1.tipo == "bool" || atributo2.tipo == "bool")){
 		pega_erro("linha " + to_string(num_linha) + ": erro: tipos de operandos incompatíveis para o operador '" + operador + "'.");
 	}
-	else if(!operacao_bool_valida(operador)){
+	else if(atributo1.tipo == "bool" && !operacao_bool_valida(operador)){
 		pega_erro("linha " + to_string(num_linha) + ": erro: operador '" + operador + "' não definido para o tipo bool.");
 	}
 
