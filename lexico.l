@@ -15,6 +15,7 @@ NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
+NOT_ID "t"{DIGITO}+
 COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 
 %%
@@ -56,6 +57,7 @@ COMENT ("//"(.*))|("/\*"(.|{FIM_LINHA})*"*/")
 "true"|"false"  { yylval.label = yytext; yylval.tipo = "bool"; return TK_BOOL;}
 {CHAR}          { yylval.label = yytext; yylval.tipo = "char"; return TK_CHAR; }
 {REAL}		    { yylval.label = yytext; yylval.tipo = "float"; return TK_REAL; }
+{NOT_ID}        { yylval.label = yytext; return TK_NOT_ID; }
 {ID}		    { yylval.label = yytext; return TK_ID; }
 
 

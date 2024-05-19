@@ -55,7 +55,7 @@ bool operacao_bool_valida(string);
 %}
 
 %token TK_NUM TK_REAL TK_BOOL TK_CHAR
-%token TK_MAIN TK_ID 
+%token TK_MAIN TK_ID TK_NOT_ID
 %token TK_FIM TK_ERROR
 %token TK_TIPO_BOOLEAN TK_TIPO_FLOAT TK_TIPO_INT TK_TIPO_CHAR
 %token MAIOR MAIOR_IGUAL MENOR MENOR_IGUAL IGUAL NAO_IGUAL
@@ -130,6 +130,10 @@ DECLARACAO	: TIPO TK_ID
 				} else {
 					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
 				}
+			}
+			| TIPO TK_NOT_ID
+			{
+				yyerror("linha " + to_string(num_linha) + ": Variavel do tipo '" + $2.label + "' é reservada");
 			}
 			;
 
