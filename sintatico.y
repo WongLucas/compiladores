@@ -27,6 +27,7 @@ struct variavel
 {
 	string nome;
 	string tipo;
+	int inicializada;
 };
 
 struct variavel vars[20];
@@ -39,6 +40,8 @@ int yylex(void);
 void yyerror(string);
 
 void pega_erro(string);
+int verifica_inicializacao(string);
+void inicializar_variavel(string);
 
 int busca_variavel(string);
 void insere_variavel(variavel&, string, string);
@@ -170,6 +173,7 @@ E 			: E '+' E
 			| TK_ID '=' E
 			{
 				if (busca_variavel($1.label)) {
+					inicializar_variavel($1.label);
 					if($3.tipo == obter_tipo_variavel($1.label)){
 						$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 					} else {
@@ -207,11 +211,14 @@ E 			: E '+' E
 			| TK_ID
 			{
 				if (busca_variavel($1.label)) {
+					if (verifica_inicializacao($1.label) == 1){
 					$$.label = gentempcode(obter_tipo_variavel($1.label));
 					$$.tipo = obter_tipo_variavel($1.label);
 					insere_variavel(vars[var_temp_qnt], $$.label, obter_tipo_variavel($1.label));
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-				} else {
+				} else{ 
+						pega_erro("linha " + to_string(num_linha) + ": erro: variável " + $1.label + " não foi inicializada.");
+				}}else {
 					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $1.label + "' não foi declarada.");
 				}
 			}
@@ -295,6 +302,7 @@ void insere_variavel(variavel& a, string nome, string tipo)
 {
     a.nome = nome;
     a.tipo = tipo;
+	a.inicializada = 0;
 	var_temp_qnt++;
 }
 
@@ -551,6 +559,28 @@ int main(int argc, char* argv[])
 void pega_erro(string MSG) {
 	lista_erros += MSG + "\n";
 	ocorreu_erro = true;
+}
+
+int verifica_inicializacao(string nome){
+	int i;
+	for(i = 0; i < var_temp_qnt; i++){
+		if (vars[i].nome == nome){
+			if (vars[i].inicializada == 1){
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void inicializar_variavel(string nome){
+	int i;
+	for(i = 0; i < var_temp_qnt; i++){
+		if (vars[i].nome == nome){
+			vars[i].inicializada = 1;
+			break;
+		}
+	}
 }
 
 void yyerror(string MSG)
