@@ -173,6 +173,7 @@ E 			: E '+' E
 			| TK_ID '=' E
 			{
 				if (busca_variavel($1.label)) {
+					inicializar_variavel($1.label);
 					if($3.tipo == obter_tipo_variavel($1.label)){
 						$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 					} else {
