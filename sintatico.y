@@ -510,6 +510,7 @@ void pega_erro(string MSG) {
 	ocorreu_erro = true;
 }
 int verifica_inicializacao(string name){
+	int i;
 	for(i = 0; i < var_temp_qnt; i++){
 		if (vars[i].nome == name){
 			if (vars[i].inicializada == 1){
@@ -521,6 +522,7 @@ int verifica_inicializacao(string name){
 }
 
 void inicializar_variavel(string name){
+	int i;
 	for(i = 0; i < var_temp_qnt; i++){
 		if (vars[i].nome == name){
 			vars[i].inicializada = 1;
