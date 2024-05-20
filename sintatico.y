@@ -217,7 +217,7 @@ E 			: E '+' E
 					insere_variavel(vars[var_temp_qnt], $$.label, obter_tipo_variavel($1.label));
 					$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 				} else{ 
-						pega_erro("linha " + to_string(num_linha) + ": erro: variável " + $1.label + "não foi inicializada.");
+						pega_erro("linha " + to_string(num_linha) + ": erro: variável " + $1.label + " não foi inicializada.");
 				}}else {
 					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $1.label + "' não foi declarada.");
 				}
@@ -561,10 +561,10 @@ void pega_erro(string MSG) {
 	ocorreu_erro = true;
 }
 
-int verifica_inicializacao(string name){
+int verifica_inicializacao(string nome){
 	int i;
 	for(i = 0; i < var_temp_qnt; i++){
-		if (vars[i].nome == name){
+		if (vars[i].nome == nome){
 			if (vars[i].inicializada == 1){
 				return 1;
 			}
@@ -573,10 +573,10 @@ int verifica_inicializacao(string name){
 	return 0;
 }
 
-void inicializar_variavel(string name){
+void inicializar_variavel(string nome){
 	int i;
 	for(i = 0; i < var_temp_qnt; i++){
-		if (vars[i].nome == name){
+		if (vars[i].nome == nome){
 			vars[i].inicializada = 1;
 			break;
 		}
