@@ -136,20 +136,33 @@ DECLARACAO	: TIPO TK_ID
 			}
 			| TIPO TK_ID '+' E
 			{
+				if (!busca_variavel($2.label)) {
 				pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' não foi inicializada.");
-			}
+			}  else {
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
+			}}
 			| TIPO TK_ID '-' E
 			{
+				if (!busca_variavel($2.label)) {
 				pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' não foi inicializada.");
-			}
+			}  else {
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
+			}}
 			| TIPO TK_ID '/' E
 			{
+				if (!busca_variavel($2.label)) {
 				pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' não foi inicializada.");
-			}
+			}  else {
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
+			}}
 			| TIPO TK_ID '*' E
 			{
+				if (!busca_variavel($2.label)) {
 				pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' não foi inicializada.");
-			}
+			}  else {
+					pega_erro("linha " + to_string(num_linha) + ": erro: variável '" + $2.label + "' já foi declarada.");
+			}}
+
 			| TIPO TK_ID '=' E
 			{
 				if (!busca_variavel($2.label)) {
